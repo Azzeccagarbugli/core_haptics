@@ -1,6 +1,6 @@
 name: core_haptics
 description: Type-safe Core Haptics FFI plugin (iOS & macOS) via SwiftPM.
-version: 0.1.0
+version: 0.0.1
 
 homepage: https://github.com/Azzeccagarbugli/core_haptics
 issue_tracker: https://github.com/Azzeccagarbugli/core_haptics/issues
