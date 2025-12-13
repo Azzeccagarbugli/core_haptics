@@ -1,7 +1,5 @@
 # core_haptics
 
-> 🎮 Bring Apple's Core Haptics to Flutter — rich, custom haptic feedback for iOS & macOS.
-
 A type-safe, FFI-based Flutter plugin that gives you full access to Apple's Core Haptics framework. Create custom vibration patterns, play AHAP files, and deliver tactile experiences that feel native.
 
 ## ✨ What's inside
@@ -28,8 +26,6 @@ Then run:
 ```bash
 flutter pub get
 ```
-
----
 
 ## 🔧 Platform Setup
 
@@ -223,7 +219,6 @@ try {
 | `io` | File not found |
 | `runtime` | Playback issue |
 
----
 
 ## 🧪 Testing
 
