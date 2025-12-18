@@ -353,3 +353,79 @@ public func chffi_player_release(_ handle: UnsafeMutableRawPointer?) {
     releaseHandle(handle as UnsafeMutableRawPointer?)
 }
 
+@_cdecl("chffi_supports_haptics")
+public func chffi_supports_haptics() -> Int32 {
+    return CHHapticEngine.capabilitiesForHardware().supportsHaptics ? 1 : 0
+}
+
+#if canImport(UIKit)
+import UIKit
+#endif
+
+@_cdecl("chffi_impact_light")
+public func chffi_impact_light() {
+    #if canImport(UIKit) && !os(tvOS)
+    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    #endif
+}
+
+@_cdecl("chffi_impact_medium")
+public func chffi_impact_medium() {
+    #if canImport(UIKit) && !os(tvOS)
+    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    #endif
+}
+
+@_cdecl("chffi_impact_heavy")
+public func chffi_impact_heavy() {
+    #if canImport(UIKit) && !os(tvOS)
+    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+    #endif
+}
+
+@_cdecl("chffi_impact_soft")
+public func chffi_impact_soft() {
+    #if canImport(UIKit) && !os(tvOS)
+    if #available(iOS 13.0, *) {
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    }
+    #endif
+}
+
+@_cdecl("chffi_impact_rigid")
+public func chffi_impact_rigid() {
+    #if canImport(UIKit) && !os(tvOS)
+    if #available(iOS 13.0, *) {
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+    #endif
+}
+
+@_cdecl("chffi_notification_success")
+public func chffi_notification_success() {
+    #if canImport(UIKit) && !os(tvOS)
+    UINotificationFeedbackGenerator().notificationOccurred(.success)
+    #endif
+}
+
+@_cdecl("chffi_notification_warning")
+public func chffi_notification_warning() {
+    #if canImport(UIKit) && !os(tvOS)
+    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+    #endif
+}
+
+@_cdecl("chffi_notification_error")
+public func chffi_notification_error() {
+    #if canImport(UIKit) && !os(tvOS)
+    UINotificationFeedbackGenerator().notificationOccurred(.error)
+    #endif
+}
+
+@_cdecl("chffi_selection")
+public func chffi_selection() {
+    #if canImport(UIKit) && !os(tvOS)
+    UISelectionFeedbackGenerator().selectionChanged()
+    #endif
+}
+

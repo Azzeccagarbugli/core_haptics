@@ -176,6 +176,34 @@ class NativeBindings {
     _stringFree =
         _lib.lookupFunction<ffi.Int32 Function(Utf8Ptr), int Function(Utf8Ptr)>(
             'chffi_string_free');
+
+    _supportsHaptics =
+        _lib.lookupFunction<ffi.Int32 Function(), int Function()>(
+            'chffi_supports_haptics');
+
+    _impactLight = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_impact_light');
+    _impactMedium = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_impact_medium');
+    _impactHeavy = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_impact_heavy');
+    _impactSoft = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_impact_soft');
+    _impactRigid = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_impact_rigid');
+
+    _notificationSuccess =
+        _lib.lookupFunction<ffi.Void Function(), void Function()>(
+            'chffi_notification_success');
+    _notificationWarning =
+        _lib.lookupFunction<ffi.Void Function(), void Function()>(
+            'chffi_notification_warning');
+    _notificationError =
+        _lib.lookupFunction<ffi.Void Function(), void Function()>(
+            'chffi_notification_error');
+
+    _selection = _lib.lookupFunction<ffi.Void Function(), void Function()>(
+        'chffi_selection');
   }
 
   /// Create a new native bindings instance for testing.
@@ -242,6 +270,16 @@ class NativeBindings {
     required void Function(ffi.Pointer<ffi.Void>) patternRelease,
     required void Function(ffi.Pointer<ffi.Void>) playerRelease,
     required int Function(Utf8Ptr) stringFree,
+    required int Function() supportsHaptics,
+    required void Function() impactLight,
+    required void Function() impactMedium,
+    required void Function() impactHeavy,
+    required void Function() impactSoft,
+    required void Function() impactRigid,
+    required void Function() notificationSuccess,
+    required void Function() notificationWarning,
+    required void Function() notificationError,
+    required void Function() selection,
   }) : _lib = ffi.DynamicLibrary.process() {
     _engineCreate = engineCreate;
     _engineStart = engineStart;
@@ -257,6 +295,16 @@ class NativeBindings {
     _patternRelease = patternRelease;
     _playerRelease = playerRelease;
     _stringFree = stringFree;
+    _supportsHaptics = supportsHaptics;
+    _impactLight = impactLight;
+    _impactMedium = impactMedium;
+    _impactHeavy = impactHeavy;
+    _impactSoft = impactSoft;
+    _impactRigid = impactRigid;
+    _notificationSuccess = notificationSuccess;
+    _notificationWarning = notificationWarning;
+    _notificationError = notificationError;
+    _selection = selection;
   }
 
   final ffi.DynamicLibrary _lib;
@@ -333,6 +381,17 @@ class NativeBindings {
   late final void Function(ffi.Pointer<ffi.Void>) _playerRelease;
 
   late final int Function(Utf8Ptr) _stringFree;
+
+  late final int Function() _supportsHaptics;
+  late final void Function() _impactLight;
+  late final void Function() _impactMedium;
+  late final void Function() _impactHeavy;
+  late final void Function() _impactSoft;
+  late final void Function() _impactRigid;
+  late final void Function() _notificationSuccess;
+  late final void Function() _notificationWarning;
+  late final void Function() _notificationError;
+  late final void Function() _selection;
 
   /// Pointer to the native function for releasing an engine handle.
   late final ffi
@@ -445,4 +504,34 @@ class NativeBindings {
 
   /// Free a string.
   int stringFree(Utf8Ptr ptr) => _stringFree(ptr);
+
+  /// Check if the device supports haptics.
+  int supportsHaptics() => _supportsHaptics();
+
+  /// Trigger light impact feedback.
+  void impactLight() => _impactLight();
+
+  /// Trigger medium impact feedback.
+  void impactMedium() => _impactMedium();
+
+  /// Trigger heavy impact feedback.
+  void impactHeavy() => _impactHeavy();
+
+  /// Trigger soft impact feedback.
+  void impactSoft() => _impactSoft();
+
+  /// Trigger rigid impact feedback.
+  void impactRigid() => _impactRigid();
+
+  /// Trigger success notification feedback.
+  void notificationSuccess() => _notificationSuccess();
+
+  /// Trigger warning notification feedback.
+  void notificationWarning() => _notificationWarning();
+
+  /// Trigger error notification feedback.
+  void notificationError() => _notificationError();
+
+  /// Trigger selection feedback.
+  void selection() => _selection();
 }

@@ -70,6 +70,20 @@ int32_t chffi_player_send_parameter(CHFFIPlayerHandle player,
                                     char** message);
 void chffi_player_release(CHFFIPlayerHandle player);
 
+int32_t chffi_supports_haptics(void);
+
+void chffi_impact_light(void);
+void chffi_impact_medium(void);
+void chffi_impact_heavy(void);
+void chffi_impact_soft(void);
+void chffi_impact_rigid(void);
+
+void chffi_notification_success(void);
+void chffi_notification_warning(void);
+void chffi_notification_error(void);
+
+void chffi_selection(void);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

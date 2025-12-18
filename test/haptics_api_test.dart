@@ -16,7 +16,10 @@ final ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>
     ffi.Pointer.fromFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
         _noopRelease);
 
-NativeBindings _makeTestBindings() {
+NativeBindings _makeTestBindings({
+  List<String>? trackCalls,
+  int supportsHapticsResult = 1,
+}) {
   int alwaysOkCreate(
     ffi.Pointer<ffi.Pointer<ffi.Void>> _,
     ffi.Pointer<ffi.NativeFunction<EngineCallbackNative>> __,
@@ -97,6 +100,19 @@ NativeBindings _makeTestBindings() {
     patternRelease: _noopRelease,
     playerRelease: _noopRelease,
     stringFree: _noopStringFree,
+    supportsHaptics: () {
+      trackCalls?.add('supportsHaptics');
+      return supportsHapticsResult;
+    },
+    impactLight: () => trackCalls?.add('impactLight'),
+    impactMedium: () => trackCalls?.add('impactMedium'),
+    impactHeavy: () => trackCalls?.add('impactHeavy'),
+    impactSoft: () => trackCalls?.add('impactSoft'),
+    impactRigid: () => trackCalls?.add('impactRigid'),
+    notificationSuccess: () => trackCalls?.add('notificationSuccess'),
+    notificationWarning: () => trackCalls?.add('notificationWarning'),
+    notificationError: () => trackCalls?.add('notificationError'),
+    selection: () => trackCalls?.add('selection'),
   );
 }
 
@@ -105,8 +121,12 @@ class FakeBridge implements NativeBridgeBase {
     this.engineCreateCode = 0,
     this.startCode = 0,
     this.parameterCode = 0,
+    this.supportsHapticsResult = 1,
   }) {
-    bindings = _makeTestBindings();
+    bindings = _makeTestBindings(
+      trackCalls: calls,
+      supportsHapticsResult: supportsHapticsResult,
+    );
   }
 
   @override
@@ -115,6 +135,7 @@ class FakeBridge implements NativeBridgeBase {
   int engineCreateCode;
   int startCode;
   int parameterCode;
+  int supportsHapticsResult;
 
   int _nextHandle = 1;
   final List<String> calls = [];
@@ -245,6 +266,10 @@ class FakeAssetBundle extends CachingAssetBundle {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  tearDown(() {
+    HapticEngine.resetForTest();
+  });
+
   test('engine lifecycle succeeds and disposes', () async {
     final bridge = FakeBridge();
     final engine = await HapticEngine.create(bridge: bridge);
@@ -350,5 +375,148 @@ void main() {
           .having((e) => e.code, 'code', HapticsErrorCode.invalidArgument)),
     );
     await engine.dispose();
+  });
+
+  group('static feedback methods', () {
+    test('isSupported returns true when device supports haptics', () async {
+      final bridge = FakeBridge(supportsHapticsResult: 1);
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      expect(await HapticEngine.isSupported, isTrue);
+    });
+
+    test('isSupported returns false when device does not support haptics',
+        () async {
+      final bridge = FakeBridge(supportsHapticsResult: 0);
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      expect(await HapticEngine.isSupported, isFalse);
+    });
+
+    test('lightImpact calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.lightImpact();
+
+      expect(bridge.calls, contains('impactLight'));
+    });
+
+    test('mediumImpact calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.mediumImpact();
+
+      expect(bridge.calls, contains('impactMedium'));
+    });
+
+    test('heavyImpact calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.heavyImpact();
+
+      expect(bridge.calls, contains('impactHeavy'));
+    });
+
+    test('softImpact calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.softImpact();
+
+      expect(bridge.calls, contains('impactSoft'));
+    });
+
+    test('rigidImpact calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.rigidImpact();
+
+      expect(bridge.calls, contains('impactRigid'));
+    });
+
+    test('success calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.success();
+
+      expect(bridge.calls, contains('notificationSuccess'));
+    });
+
+    test('warning calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.warning();
+
+      expect(bridge.calls, contains('notificationWarning'));
+    });
+
+    test('error calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.error();
+
+      expect(bridge.calls, contains('notificationError'));
+    });
+
+    test('selection calls native function', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bindings: bridge.bindings);
+
+      await HapticEngine.selection();
+
+      expect(bridge.calls, contains('selection'));
+    });
+
+    test('play() creates engine, pattern, player and cleans up', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bridge: bridge, bindings: bridge.bindings);
+
+      await HapticEngine.play([
+        const HapticEvent(
+          type: HapticEventType.transient,
+          intensity: 0.8,
+        ),
+      ]);
+
+      expect(
+        bridge.calls,
+        containsAllInOrder([
+          'engineCreate',
+          startsWith('engineStart'),
+          startsWith('patternFromBytes'),
+          startsWith('playerCreate'),
+          startsWith('playerPlay'),
+          startsWith('playerRelease'),
+          startsWith('patternRelease'),
+        ]),
+      );
+    });
+
+    test('play() reuses shared engine on subsequent calls', () async {
+      final bridge = FakeBridge();
+      HapticEngine.resetForTest(bridge: bridge, bindings: bridge.bindings);
+
+      await HapticEngine.play([
+        const HapticEvent(type: HapticEventType.transient),
+      ]);
+      await HapticEngine.play([
+        const HapticEvent(type: HapticEventType.transient),
+      ]);
+
+      final engineCreateCalls =
+          bridge.calls.where((c) => c == 'engineCreate').length;
+      expect(engineCreateCalls, equals(1));
+
+      final patternCalls =
+          bridge.calls.where((c) => c.startsWith('patternFromBytes')).length;
+      expect(patternCalls, equals(2));
+    });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ffi' as ffi;
 
 import 'package:ffi/ffi.dart' as pkgffi;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'dart:convert';
 
@@ -17,6 +18,20 @@ typedef HapticEngineEventHandler = void Function(
 );
 
 /// Manages the Core Haptics engine lifecycle and pattern loading.
+///
+/// For simple one-liner haptics, use the static methods:
+/// ```dart
+/// await HapticEngine.success();
+/// await HapticEngine.mediumImpact();
+/// ```
+///
+/// For advanced control (looping, dynamic parameters, engine events),
+/// create an engine instance:
+/// ```dart
+/// final engine = await HapticEngine.create();
+/// await engine.start();
+/// // ...
+/// ```
 class HapticEngine implements ffi.Finalizable {
   HapticEngine._(
     this._bridge,
@@ -31,6 +46,110 @@ class HapticEngine implements ffi.Finalizable {
 
   static int _nextContextId = 1;
   static final Map<int, void Function(int, String?)> _contextHandlers = {};
+
+  static NativeBindings? _staticBindings;
+  static HapticEngine? _sharedEngine;
+  static NativeBridgeBase? _staticBridge;
+
+  static NativeBindings get _b => _staticBindings ??= NativeBindings();
+
+  /// Whether the device supports haptic feedback.
+  ///
+  /// Returns `true` if the device has a Taptic Engine (iPhone 8+ or supported Mac).
+  static Future<bool> get isSupported async => _b.supportsHaptics() == 1;
+
+  /// Trigger a light impact haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> lightImpact() async {
+    if (await isSupported) _b.impactLight();
+  }
+
+  /// Trigger a medium impact haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> mediumImpact() async {
+    if (await isSupported) _b.impactMedium();
+  }
+
+  /// Trigger a heavy impact haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> heavyImpact() async {
+    if (await isSupported) _b.impactHeavy();
+  }
+
+  /// Trigger a soft impact haptic feedback (iOS 13.0+).
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> softImpact() async {
+    if (await isSupported) _b.impactSoft();
+  }
+
+  /// Trigger a rigid impact haptic feedback (iOS 13.0+).
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> rigidImpact() async {
+    if (await isSupported) _b.impactRigid();
+  }
+
+  /// Trigger a success notification haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> success() async {
+    if (await isSupported) _b.notificationSuccess();
+  }
+
+  /// Trigger a warning notification haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> warning() async {
+    if (await isSupported) _b.notificationWarning();
+  }
+
+  /// Trigger an error notification haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> error() async {
+    if (await isSupported) _b.notificationError();
+  }
+
+  /// Trigger a selection change haptic feedback.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  static Future<void> selection() async {
+    if (await isSupported) _b.selection();
+  }
+
+  /// Play a custom haptic pattern.
+  ///
+  /// Creates a shared engine (reused across calls), loads the pattern,
+  /// plays it, and cleans up the player and pattern.
+  ///
+  /// Silently does nothing if haptics are not supported on this device.
+  ///
+  /// For more control, use [HapticEngine.create] directly.
+  static Future<void> play(List<HapticEvent> events) async {
+    if (!await isSupported) return;
+    _sharedEngine ??= await HapticEngine.create(bridge: _staticBridge);
+    await _sharedEngine!.start();
+    final pattern = await _sharedEngine!.loadPatternFromEvents(events);
+    final player = await _sharedEngine!.createPlayer(pattern);
+    await player.play();
+    await player.dispose();
+    await pattern.dispose();
+  }
+
+  /// Reset static state for testing.
+  @visibleForTesting
+  static void resetForTest({
+    NativeBindings? bindings,
+    NativeBridgeBase? bridge,
+  }) {
+    _staticBindings = bindings;
+    _staticBridge = bridge;
+    _sharedEngine = null;
+  }
 
   final NativeBridgeBase _bridge;
   final ffi.Pointer<ffi.Void> _handle;
