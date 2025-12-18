@@ -1,10 +1,11 @@
-# core_haptics
+![alt Banner of the core_haptics project](https://raw.githubusercontent.com/Azzeccagarbugli/core_haptics/main/assets/banner.png)
 
 A type-safe, FFI-based Flutter plugin that gives you full access to Apple's Core Haptics framework. Create custom vibration patterns, play AHAP files, and deliver tactile experiences that feel native.
 
 ## ✨ What's inside
 
 - **🎯 Complete Core Haptics wrapper** — engines, patterns, players, and dynamic parameters
+- **⚡ One-liner haptics** — `HapticEngine.success()`, `HapticEngine.mediumImpact()` with zero setup
 - **📄 AHAP everywhere** — load from JSON strings, files, or Flutter assets  
 - **🎨 Programmatic patterns** — build haptic sequences with `HapticEvent` (no JSON needed!)
 - **🛡️ Memory-safe FFI** — automatic cleanup with finalizers, strongly-typed enums
@@ -19,7 +20,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  core_haptics: ^0.1.0
+  core_haptics: ^latest_version
 ```
 
 Then run:
@@ -54,7 +55,55 @@ Since this plugin uses SwiftPM instead of CocoaPods, you need to manually link t
 
 ## 🚀 Quick Start
 
-### Basic haptic tap
+The easiest way to use the plugin is to use the static methods. Instead if you want to use the full API, you can create an engine instance.
+
+### One-liner haptics
+
+All static methods automatically check device support and silently do nothing on unsupported devices — no need to wrap calls in `isSupported` checks!
+
+```dart
+import 'package:core_haptics/core_haptics.dart';
+
+// Impact feedback
+await HapticEngine.lightImpact();
+await HapticEngine.mediumImpact();
+await HapticEngine.heavyImpact();
+
+// Notification feedback (not available in Flutter's HapticFeedback!)
+await HapticEngine.success();
+await HapticEngine.warning();
+await HapticEngine.error();
+
+// Selection feedback
+await HapticEngine.selection();
+```
+
+Use `isSupported` when you need to make UI decisions based on haptics availability:
+
+```dart
+// Show/hide haptics settings based on device capability
+final showHapticsToggle = await HapticEngine.isSupported;
+```
+
+For custom patterns with precise timing:
+
+```dart
+await HapticEngine.play([
+  HapticEvent(type: HapticEventType.transient, intensity: 0.8, sharpness: 0.5),
+  HapticEvent(
+    type: HapticEventType.continuous,
+    time: Duration(milliseconds: 100),
+    duration: Duration(seconds: 1),
+    intensity: 0.5,
+  ),
+]);
+```
+
+### Advanced usage
+
+For full control over engines, patterns, players, looping, and dynamic parameters, use the `HapticEngine` API directly.
+
+#### Basic haptic tap
 
 ```dart
 import 'package:core_haptics/core_haptics.dart';
@@ -92,7 +141,7 @@ Future<void> playSimpleTap() async {
 }
 ```
 
-### Programmatic patterns (no JSON!)
+#### Programmatic patterns
 
 ```dart
 final pattern = await engine.loadPatternFromEvents([
@@ -114,7 +163,7 @@ final pattern = await engine.loadPatternFromEvents([
 ]);
 ```
 
-### Load from Flutter assets
+#### Load from Flutter assets
 
 ```dart
 // 1. Add AHAP file to pubspec.yaml assets
@@ -128,13 +177,8 @@ final pattern = await engine.loadPatternFromAsset('assets/haptics/my_pattern.aha
 final engine = await HapticEngine.create(
   onEvent: (event, message) {
     switch (event) {
-      case HapticEngineEvent.interrupted:
-        print('⚠️ Haptics interrupted: $message');
-        break;
-      case HapticEngineEvent.restarted:
-        print('✅ Haptics resumed');
-        break;
-      // ...
+      HapticEngineEvent.interrupted => print('⚠️ Haptics interrupted: $message');
+      HapticEngineEvent.restarted => print('✅ Haptics resumed');
     }
   },
 );
@@ -143,7 +187,34 @@ final engine = await HapticEngine.create(
 ## 🎯 API Reference
 
 ### `HapticEngine`
-Your main entry point. Manages the Core Haptics engine lifecycle.
+Your main entry point. Provides both static one-liner methods and full engine control.
+
+**Static methods** _(uses native `UIFeedbackGenerator`, auto-checks device support)_:
+
+```dart
+// Impact feedback (silently no-ops on unsupported devices)
+await HapticEngine.lightImpact();
+await HapticEngine.mediumImpact();
+await HapticEngine.heavyImpact();
+await HapticEngine.softImpact();
+await HapticEngine.rigidImpact();
+
+// Notification feedback
+await HapticEngine.success();
+await HapticEngine.warning();
+await HapticEngine.error();
+
+// Selection feedback
+await HapticEngine.selection();
+
+// Custom patterns
+await HapticEngine.play(eventList);
+
+// Check device support (for UI decisions)
+if (await HapticEngine.isSupported) { ... }
+```
+
+**Instance API** _(for full control)_:
 
 ```dart
 // Create
