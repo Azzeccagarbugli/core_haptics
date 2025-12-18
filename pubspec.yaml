@@ -1,6 +1,6 @@
 name: core_haptics
 description: Type-safe Core Haptics FFI plugin (iOS & macOS) via SwiftPM.
-version: 0.0.2
+version: 0.0.3
 
 homepage: https://github.com/Azzeccagarbugli/core_haptics
 issue_tracker: https://github.com/Azzeccagarbugli/core_haptics/issues
@@ -9,6 +9,8 @@ topics:
   - haptics
   - vibration
   - ahap
+  - core-haptics
+  - ffi
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -17,13 +19,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  ffi: ^2.1.3
+  ffi: ^2.1.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-  mocktail: ^1.0.3
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
 
 flutter:
   plugin:
