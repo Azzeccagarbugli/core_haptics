@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Remove `library core_haptics` directive.
+
 ## 0.0.3
 
 * Static methods now auto-check `isSupported` and silently no-op on unsupported devices.
