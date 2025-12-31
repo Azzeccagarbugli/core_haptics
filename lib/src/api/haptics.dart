@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import '../ffi/bridge.dart';
 import '../ffi/bindings.dart';
+import '../platform/haptic_service.dart';
 import 'errors.dart';
 import 'types.dart';
 
@@ -50,86 +51,91 @@ class HapticEngine implements ffi.Finalizable {
   static NativeBindings? _staticBindings;
   static HapticEngine? _sharedEngine;
   static NativeBridgeBase? _staticBridge;
+  static HapticServiceBase? _staticService;
 
-  static NativeBindings get _b => _staticBindings ??= NativeBindings();
+  static HapticServiceBase get _service =>
+      _staticService ??= HapticServiceFactory.create(bindings: _staticBindings);
 
   /// Whether the device supports haptic feedback.
   ///
-  /// Returns `true` if the device has a Taptic Engine (iPhone 8+ or supported Mac).
-  static Future<bool> get isSupported async => _b.supportsHaptics() == 1;
+  /// On iOS/macOS, returns `true` if the device has a Taptic Engine.
+  /// On other platforms, returns `true` if Flutter's HapticFeedback is available.
+  static Future<bool> get isSupported => _service.isSupported;
+
+  /// Whether advanced Core Haptics features are available.
+  ///
+  /// Returns `true` on iOS/macOS, `false` on other platforms.
+  /// Advanced features include: custom patterns, AHAP files, looping, and dynamic parameters.
+  static bool get supportsAdvancedHaptics => _service.supportsAdvancedHaptics;
 
   /// Trigger a light impact haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> lightImpact() async {
-    if (await isSupported) _b.impactLight();
-  }
+  /// Works on all platforms. On iOS/macOS uses Core Haptics,
+  /// on other platforms falls back to Flutter's HapticFeedback.
+  static Future<void> lightImpact() => _service.lightImpact();
 
   /// Trigger a medium impact haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> mediumImpact() async {
-    if (await isSupported) _b.impactMedium();
-  }
+  /// Works on all platforms. On iOS/macOS uses Core Haptics,
+  /// on other platforms falls back to Flutter's HapticFeedback.
+  static Future<void> mediumImpact() => _service.mediumImpact();
 
   /// Trigger a heavy impact haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> heavyImpact() async {
-    if (await isSupported) _b.impactHeavy();
-  }
+  /// Works on all platforms. On iOS/macOS uses Core Haptics,
+  /// on other platforms falls back to Flutter's HapticFeedback.
+  static Future<void> heavyImpact() => _service.heavyImpact();
 
-  /// Trigger a soft impact haptic feedback (iOS 13.0+).
+  /// Trigger a soft impact haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> softImpact() async {
-    if (await isSupported) _b.impactSoft();
-  }
+  /// On iOS 13.0+ uses native soft impact. On other platforms,
+  /// falls back to light impact as the closest equivalent.
+  static Future<void> softImpact() => _service.softImpact();
 
-  /// Trigger a rigid impact haptic feedback (iOS 13.0+).
+  /// Trigger a rigid impact haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> rigidImpact() async {
-    if (await isSupported) _b.impactRigid();
-  }
+  /// On iOS 13.0+ uses native rigid impact. On other platforms,
+  /// falls back to heavy impact as the closest equivalent.
+  static Future<void> rigidImpact() => _service.rigidImpact();
 
   /// Trigger a success notification haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> success() async {
-    if (await isSupported) _b.notificationSuccess();
-  }
+  /// On iOS/macOS uses notification feedback generator.
+  /// On other platforms, falls back to medium impact.
+  static Future<void> success() => _service.success();
 
   /// Trigger a warning notification haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> warning() async {
-    if (await isSupported) _b.notificationWarning();
-  }
+  /// On iOS/macOS uses notification feedback generator.
+  /// On other platforms, falls back to heavy impact.
+  static Future<void> warning() => _service.warning();
 
   /// Trigger an error notification haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> error() async {
-    if (await isSupported) _b.notificationError();
-  }
+  /// On iOS/macOS uses notification feedback generator.
+  /// On other platforms, falls back to vibrate.
+  static Future<void> error() => _service.error();
 
   /// Trigger a selection change haptic feedback.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
-  static Future<void> selection() async {
-    if (await isSupported) _b.selection();
-  }
+  /// Works on all platforms. On iOS/macOS uses Core Haptics,
+  /// on other platforms falls back to Flutter's selectionClick.
+  static Future<void> selection() => _service.selection();
 
   /// Play a custom haptic pattern.
   ///
   /// Creates a shared engine (reused across calls), loads the pattern,
   /// plays it, and cleans up the player and pattern.
   ///
-  /// Silently does nothing if haptics are not supported on this device.
+  /// **Note:** This method requires Core Haptics and only works on iOS/macOS.
+  /// On other platforms, throws [HapticsException] with [HapticsErrorCode.notSupported].
+  ///
+  /// For cross-platform haptics, use the simpler static methods like
+  /// [lightImpact], [mediumImpact], or [success].
   ///
   /// For more control, use [HapticEngine.create] directly.
   static Future<void> play(List<HapticEvent> events) async {
+    ensureAdvancedHapticsSupported();
     if (!await isSupported) return;
     _sharedEngine ??= await HapticEngine.create(bridge: _staticBridge);
     await _sharedEngine!.start();
@@ -145,9 +151,11 @@ class HapticEngine implements ffi.Finalizable {
   static void resetForTest({
     NativeBindings? bindings,
     NativeBridgeBase? bridge,
+    HapticServiceBase? service,
   }) {
     _staticBindings = bindings;
     _staticBridge = bridge;
+    _staticService = service;
     _sharedEngine = null;
   }
 
@@ -178,10 +186,17 @@ class HapticEngine implements ffi.Finalizable {
   }
 
   /// Create a new engine and optionally register for engine events.
+  ///
+  /// **Note:** This method requires Core Haptics and only works on iOS/macOS.
+  /// On other platforms, throws [HapticsException] with [HapticsErrorCode.notSupported].
+  ///
+  /// For cross-platform haptics, use the simpler static methods like
+  /// [lightImpact], [mediumImpact], or [success].
   static Future<HapticEngine> create({
     HapticEngineEventHandler? onEvent,
     NativeBridgeBase? bridge,
   }) async {
+    ensureAdvancedHapticsSupported();
     final nativeBridge = bridge ?? NativeBridge();
     final contextId = _nextContextId++;
     final events = StreamController<HapticEngineEvent>.broadcast();

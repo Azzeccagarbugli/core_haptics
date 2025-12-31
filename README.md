@@ -1,17 +1,41 @@
 ![alt Banner of the core_haptics project](https://raw.githubusercontent.com/Azzeccagarbugli/core_haptics/main/assets/banner.png)
 
-A type-safe, FFI-based Flutter plugin that gives you full access to Apple's Core Haptics framework. Create custom vibration patterns, play AHAP files, and deliver tactile experiences that feel native.
+A **cross-platform** haptic feedback library for Flutter. Full [Core Haptics](https://developer.apple.com/documentation/corehaptics/) power on iOS and macOS with automatic fallback to Flutter's `HapticFeedback` on Android and other platforms. Create custom vibration patterns, play AHAP files, and deliver tactile experiences that feel native.
 
 ## ✨ What's inside
 
-- **🎯 Complete Core Haptics wrapper** — engines, patterns, players, and dynamic parameters
+- **🌍 Cross-platform** — works everywhere! Core Haptics on Apple, `HapticFeedback` fallback elsewhere
+- **🎯 Complete Core Haptics wrapper** — engines, patterns, players, and dynamic parameters _(iOS/macOS)_
 - **⚡ One-liner haptics** — `HapticEngine.success()`, `HapticEngine.mediumImpact()` with zero setup
-- **📄 AHAP everywhere** — load from JSON strings, files, or Flutter assets  
-- **🎨 Programmatic patterns** — build haptic sequences with `HapticEvent` (no JSON needed!)
+- **📄 AHAP everywhere** — load from JSON strings, files, or Flutter assets _(iOS/macOS)_
+- **🎨 Programmatic patterns** — build haptic sequences with `HapticEvent` _(iOS/macOS)_
 - **🛡️ Memory-safe FFI** — automatic cleanup with finalizers, strongly-typed enums
-- **🎛️ Live parameter control** — adjust intensity and sharpness during playback
-- **🔄 Interruption handling** — callbacks for audio session changes and resets
+- **🎛️ Live parameter control** — adjust intensity and sharpness during playback _(iOS/macOS)_
+- **🔄 Interruption handling** — callbacks for audio session changes and resets _(iOS/macOS)_
 - **🚫 Zero CocoaPods** — Swift Package Manager only, clean and modern
+
+## 📱 Platform Support
+
+| Feature | iOS | MacOS | Android | Windows | Linux | Web |
+|---------|:---:|:-----:|:-------:|:-------:|:-----:|:---:|
+| `lightImpact()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `mediumImpact()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `heavyImpact()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `softImpact()` | ✅ | ✅ | ⚡ | ⚡ | ⚡ | ⚡ |
+| `rigidImpact()` | ✅ | ✅ | ⚡ | ⚡ | ⚡ | ⚡ |
+| `success()` | ✅ | ✅ | ⚡ | ⚡ | ⚡ | ⚡ |
+| `warning()` | ✅ | ✅ | ⚡ | ⚡ | ⚡ | ⚡ |
+| `error()` | ✅ | ✅ | ⚡ | ⚡ | ⚡ | ⚡ |
+| `selection()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `HapticEngine` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| AHAP patterns | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Looping | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Dynamic parameters | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+**Legend:** ✅ Full support | ⚡ Fallback _(closest equivalent)_ | ❌ Not available
+
+> [!NOTE] 
+> On non-Apple platforms, the static methods automatically use Flutter's `HapticFeedback` service. Methods like `softImpact()` and `success()` map to the closest available feedback type.
 
 ## 📦 Installation
 
@@ -29,13 +53,17 @@ flutter pub get
 
 ## 🔧 Platform Setup
 
+### Android, Windows, Linux, Web
+
+**No setup required!** The plugin automatically uses Flutter's built-in `HapticFeedback` service on these platforms.
+
+### iOS / macOS _(Full Core Haptics)_
+
 The plugin uses **Swift Package Manager** to build the native module.
 
 **Requirements:**
 - iOS 13.0+ or macOS 11.0+
 - Physical device with haptic engine _(iPhone 8+ or supported Mac)_
-
-### iOS / macOS _(Swift Package Manager)_
 
 **Recommended:** Enable Flutter's SwiftPM support and everything works automatically:
 
@@ -67,26 +95,26 @@ That's it! Flutter handles linking the native module for you.
 
 ## 🚀 Quick Start
 
-The easiest way to use the plugin is to use the static methods. Instead if you want to use the full API, you can create an engine instance.
+The easiest way to use the plugin is to use the static methods — they work on **all platforms**! For advanced control (iOS/macOS only), create an engine instance.
 
-### One-liner haptics
+### One-liner haptics _(Cross-platform)_
 
-All static methods automatically check device support and silently do nothing on unsupported devices — no need to wrap calls in `isSupported` checks!
+All static methods work on every platform. On iOS/macOS they use Core Haptics; on Android and other platforms they automatically fall back to Flutter's `HapticFeedback`.
 
 ```dart
 import 'package:core_haptics/core_haptics.dart';
 
-// Impact feedback
+// Impact feedback — works everywhere!
 await HapticEngine.lightImpact();
 await HapticEngine.mediumImpact();
 await HapticEngine.heavyImpact();
 
-// Notification feedback (not available in Flutter's HapticFeedback!)
+// Notification feedback — native on iOS/macOS, fallback elsewhere
 await HapticEngine.success();
 await HapticEngine.warning();
 await HapticEngine.error();
 
-// Selection feedback
+// Selection feedback — works everywhere!
 await HapticEngine.selection();
 ```
 
@@ -97,9 +125,19 @@ Use `isSupported` when you need to make UI decisions based on haptics availabili
 final showHapticsToggle = await HapticEngine.isSupported;
 ```
 
-For custom patterns with precise timing:
+Check if advanced features _(patterns, looping, etc.)_ are available:
 
 ```dart
+// Only iOS/macOS support the full HapticEngine API
+if (HapticEngine.supportsAdvancedHaptics) {
+  // Can use HapticEngine.create(), patterns, etc.
+}
+```
+
+For custom patterns with precise timing _(iOS/macOS only)_:
+
+```dart
+// Note: This throws HapticsException on non-Apple platforms
 await HapticEngine.play([
   HapticEvent(type: HapticEventType.transient, intensity: 0.8, sharpness: 0.5),
   HapticEvent(
@@ -111,9 +149,12 @@ await HapticEngine.play([
 ]);
 ```
 
-### Advanced usage
+### Advanced usage _(iOS/macOS only)_
 
 For full control over engines, patterns, players, looping, and dynamic parameters, use the `HapticEngine` API directly.
+
+> [!CAUTION]
+> The advanced API requires Core Haptics and only works on iOS/macOS. On other platforms, `HapticEngine.create()` throws `HapticsException(notSupported)`.
 
 #### Basic haptic tap
 
@@ -199,37 +240,40 @@ final engine = await HapticEngine.create(
 ## 🎯 API Reference
 
 ### `HapticEngine`
-Your main entry point. Provides both static one-liner methods and full engine control.
+Your main entry point. Provides both static one-liner methods (cross-platform) and full engine control _(iOS/macOS)_.
 
-**Static methods** _(uses native `UIFeedbackGenerator`, auto-checks device support)_:
+**Static methods** _(cross-platform, uses native feedback or Flutter fallback)_:
 
 ```dart
-// Impact feedback (silently no-ops on unsupported devices)
+// Impact feedback — works on all platforms
 await HapticEngine.lightImpact();
 await HapticEngine.mediumImpact();
 await HapticEngine.heavyImpact();
-await HapticEngine.softImpact();
-await HapticEngine.rigidImpact();
+await HapticEngine.softImpact();  // Falls back to light on non-Apple
+await HapticEngine.rigidImpact(); // Falls back to heavy on non-Apple
 
-// Notification feedback
-await HapticEngine.success();
-await HapticEngine.warning();
-await HapticEngine.error();
+// Notification feedback — falls back on non-Apple platforms
+await HapticEngine.success();  // mediumImpact on non-Apple
+await HapticEngine.warning();  // heavyImpact on non-Apple
+await HapticEngine.error();    // vibrate on non-Apple
 
-// Selection feedback
+// Selection feedback — works on all platforms
 await HapticEngine.selection();
 
-// Custom patterns
+// Custom patterns (iOS/macOS only — throws on other platforms)
 await HapticEngine.play(eventList);
 
 // Check device support (for UI decisions)
 if (await HapticEngine.isSupported) { ... }
+
+// Check if advanced features are available
+if (HapticEngine.supportsAdvancedHaptics) { ... }
 ```
 
-**Instance API** _(for full control)_:
+**Instance API** _(iOS/macOS only)_:
 
 ```dart
-// Create
+// Create — throws `HapticsException` on non-Apple platforms
 final engine = await HapticEngine.create(onEvent: callback);
 
 // Start/stop
@@ -249,14 +293,14 @@ final player = await engine.createPlayer(pattern);
 await engine.dispose();
 ```
 
-### `HapticPlayer`
+### `HapticPlayer` _(iOS/macOS only)_
 Controls playback of a haptic pattern.
 
 ```dart
 await player.play(atTime: 0);
 await player.stop(atTime: 0);
 
-// Looping (not available on all platforms)
+// Looping
 await player.setLoop(enabled: true, loopStart: 0, loopEnd: 2.0);
 
 // Dynamic parameter updates (during playback)
@@ -320,13 +364,16 @@ Tests the Core Haptics bridge _(skips on devices without haptics)_.
 
 ## 🐛 Troubleshooting
 
-### "Cannot find symbol 'chffi_engine_create'"
+### "`HapticsException`, notSupported"
+You're trying to use `HapticEngine.create()`, `HapticEngine.play()`, or other advanced features on a non-Apple platform. These features require Core Haptics and only work on iOS and macOS. Use the static methods _(`lightImpact()`, `success()`, etc.)_ for cross-platform haptics.
+
+### "Cannot find symbol 'chffi_engine_create'" _(iOS/macOS)_
 The SwiftPM package isn't linked. Go back to [Platform Setup](#-platform-setup) and ensure `CoreHapticsFFI` is added to your app target's frameworks.
 
-### "Device does not support haptics"
+### "Device does not support haptics" _(iOS/macOS)_
 Core Haptics requires an iPhone 8+ or newer Mac with Taptic Engine. Simulators don't support haptics.
 
-### "HapticsException: runtime (-4820)"
+### "HapticsException: runtime (-4820)" _(iOS/macOS)_
 Tried to send a parameter update to a player that isn't actively playing. Ensure the pattern is playing before calling `setParameter`.
 
 ## 📚 Learn More
