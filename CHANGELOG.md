@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Update documentation with Swift Package Manager setup instructions.
+
 ## 0.0.4
 
 * Remove `library core_haptics` directive.

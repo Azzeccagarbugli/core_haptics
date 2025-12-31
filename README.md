@@ -13,7 +13,6 @@ A type-safe, FFI-based Flutter plugin that gives you full access to Apple's Core
 - **🔄 Interruption handling** — callbacks for audio session changes and resets
 - **🚫 Zero CocoaPods** — Swift Package Manager only, clean and modern
 
-
 ## 📦 Installation
 
 Add to your `pubspec.yaml`:
@@ -30,9 +29,24 @@ flutter pub get
 
 ## 🔧 Platform Setup
 
-### iOS / macOS (Swift Package Manager)
+The plugin uses **Swift Package Manager** to build the native module.
 
-Since this plugin uses SwiftPM instead of CocoaPods, you need to manually link the native module:
+**Requirements:**
+- iOS 13.0+ or macOS 11.0+
+- Physical device with haptic engine _(iPhone 8+ or supported Mac)_
+
+### iOS / macOS _(Swift Package Manager)_
+
+**Recommended:** Enable Flutter's SwiftPM support and everything works automatically:
+
+```bash
+flutter config --enable-swift-package-manager
+```
+
+That's it! Flutter handles linking the native module for you.
+
+<details>
+<summary><b>Manual setup <i>(if you can't use the SwiftPM feature flag)</i></b></summary>
 
 **Step 1:** Open your app in Xcode  
 `example/ios/Runner.xcworkspace` (or `macos/Runner.xcworkspace`)
@@ -46,12 +60,10 @@ Since this plugin uses SwiftPM instead of CocoaPods, you need to manually link t
 - In your app target's **Frameworks and Libraries**, add `CoreHapticsFFI`
 - Set to **Embed & Sign** (iOS) or **Do Not Embed** (macOS)
 
-**Requirements:**  
-- iOS 13.0+ or macOS 11.0+
-- Physical device with haptic engine (iPhone 8+ or supported Mac)
+</details>
 
 > [!NOTE] 
->SwiftPM gives cleaner builds, better dependency management, and is Apple's recommended approach for modern Swift libraries.
+> SwiftPM gives cleaner builds, better dependency management, and is Apple's recommended approach for modern Swift libraries.
 
 ## 🚀 Quick Start
 
