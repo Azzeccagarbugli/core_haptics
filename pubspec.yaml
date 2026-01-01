@@ -1,6 +1,6 @@
 name: core_haptics
-description: Type-safe Core Haptics FFI plugin via SwiftPM with automatic fallback to Flutter's `HapticFeedback`.
-version: 0.0.6
+description: Type-safe Core Haptics FFI plugin via SwiftPM with automatic fallback to Flutter's Haptic Feedback.
+version: 0.0.7
 
 homepage: https://github.com/Azzeccagarbugli/core_haptics
 issue_tracker: https://github.com/Azzeccagarbugli/core_haptics/issues
