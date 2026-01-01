@@ -1,12 +1,3 @@
-import 'dart:ffi';
-import 'dart:io';
-
-/// Load the Core Haptics library.
-DynamicLibrary loadCoreHapticsLibrary() {
-  /// Load the Core Haptics library from the process.
-  if (Platform.isIOS || Platform.isMacOS) {
-    // Symbols are linked directly from the SwiftPM-built dynamic library.
-    return DynamicLibrary.process();
-  }
-  throw UnsupportedError('Core Haptics is only available on iOS or macOS.');
-}
+// Use stub on web/WASM, native implementation when dart:io is available.
+export 'native_library_stub.dart'
+    if (dart.library.io) 'native_library_native.dart';

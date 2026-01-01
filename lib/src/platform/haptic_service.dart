@@ -1,10 +1,12 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../api/errors.dart';
 import '../ffi/bindings.dart';
+
+// Use stub on web/WASM, native implementation when dart:io is available.
+import 'platform_stub.dart' if (dart.library.io) 'platform_native.dart'
+    as platform;
 
 /// Abstract interface for platform-specific haptic feedback implementations.
 abstract class HapticServiceBase {
@@ -185,7 +187,7 @@ class HapticServiceFactory {
   /// Returns `true` if running on iOS or macOS (platforms with Core Haptics).
   static bool get isApplePlatform {
     if (kIsWeb) return false;
-    return Platform.isIOS || Platform.isMacOS;
+    return platform.isApplePlatform;
   }
 
   /// Create the appropriate haptic service for the current platform.
