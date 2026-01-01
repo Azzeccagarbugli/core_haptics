@@ -1,3 +1,7 @@
+## 0.0.7
+
+* Use stub on web/WASM, native implementation when `dart:io` is available.
+
 ## 0.0.6
 
 * Cross-platform support.
