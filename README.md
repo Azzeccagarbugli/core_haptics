@@ -364,7 +364,7 @@ Tests the Core Haptics bridge _(skips on devices without haptics)_.
 
 ## 🐛 Troubleshooting
 
-### "`HapticsException`, notSupported"
+### "`HapticsException(notSupported)`"
 You're trying to use `HapticEngine.create()`, `HapticEngine.play()`, or other advanced features on a non-Apple platform. These features require Core Haptics and only work on iOS and macOS. Use the static methods _(`lightImpact()`, `success()`, etc.)_ for cross-platform haptics.
 
 ### "Cannot find symbol 'chffi_engine_create'" _(iOS/macOS)_
