@@ -1,3 +1,7 @@
+## 0.0.8
+
+* Remove unused `dart:typed_data` import.
+
 ## 0.0.7
 
 * Use stub on web/WASM, native implementation when `dart:io` is available.
